@@ -4,7 +4,7 @@
 package gsloginemulator;
 
 import java.io.File;
-import gsloginemulatorDatabase.*;
+//import gsloginemulatorDatabase.*;
 import java.io.*;
 import java.util.Scanner;
 
@@ -26,7 +26,7 @@ public class Config {
 		
 	}
 	
-	public String getLine(String Key) {
+	public static String getLine(String Key) {
 		File config = new File(Config.IniLocation);
 		Scanner in = null;
 		String value = null;

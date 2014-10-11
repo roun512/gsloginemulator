@@ -9,28 +9,50 @@ import java.util.Properties;
  */
 
 public class DatabaseDriver {
-
-	static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-	static final String DB_URL = "jdbc:mysql://localhost/";
+	
 	
 	private Boolean IsNewDatabase;
+	public Connection connection;
+	
 
-	public static void main(String[] args) {
-		
-
-	}
-
-	public Connection connect(String host, int port, String username, String password, String Database) throws SQLException {
-		Connection conn = null;
+	public void main(String[] args) {
 		Properties connectionProps = new Properties();
-		connectionProps.put("user", username);
-		connectionProps.put("password", password);
+		connectionProps.put("user", args[2]);
+		connectionProps.put("password", args[3]);
 		try {
-			conn = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/", connectionProps);
+			this.connection = DriverManager.getConnection("jdbc:mysql://" + args[0] + ":" + args[1] + "/" + args[4], connectionProps);
 		} catch(Exception e) {
 			System.out.println("Couldn\'t connect to database! error: " + e.getMessage());
 		}
-		return conn;
 	}
+
+//	public void Connect() {
+//		this.connection
+//	}
+	
+	public void Close() {
+		try {
+			this.connection.close();
+		} catch(Exception e) {
+			System.out.println("Unable to close connection to Database! error: " + e.getMessage());
+		}
+	}
+	
+	public void Execute(String sql) throws SQLException {
+		Statement st = null;
+		try {
+			st = this.connection.createStatement();
+			ResultSet rs = st.executeQuery(sql);
+			
+		} catch(SQLException e) {
+			System.out.println("SQL Error: " + e.getMessage());
+		} finally {
+			if(st != null) {
+				st.close();
+			}
+		}
+		
+	}
+
 	
 }

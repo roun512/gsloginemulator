@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import gsloginemulatorDatabase.*;
 
 /**
  * @author roun512
@@ -23,7 +24,7 @@ public class Server {
 	public static File LogFile = new File(System.getProperty("user.dir") + "server.log");
     //private GpcmServer CmServer;
     //private GpspServer SpServer;
-    //public static GamespyDatabase Database;
+    public static GamespyDatabase Database;
 	
 	public static void main(String[] args) throws IOException {
 		System.out.println("Initializing...");
@@ -127,13 +128,13 @@ public class Server {
 					}
 					
 				case "setpid":
-					if (strArray.Length < 3)
+					if (command.Length < 3)
 		            {
 						System.out.println(" - Incorrect command format. Please type 'help' to see list of available commands.");
 						System.out.println("");
 						return;
 		            }
-		            else if (string.IsNullOrEmpty(strArray[1]) || string.IsNullOrEmpty(strArray[2]))
+		            else if (cmd[1] == null || cmd[1].isEmpty() || cmd[2] == null || cmd[2].isEmpty())
 		            {
 		            	System.out.println(" - Account name or PID not provided. Please try again with the correct format.");
 		            	System.out.println("");
