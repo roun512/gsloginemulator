@@ -15,6 +15,11 @@ public class GamespyDatabase {
 	
 	private DatabaseDriver Driver;
 	
+	public void main() {
+		String username = Config.getLine("Username");
+		System.out.print(username);
+	}
+	
 	public GamespyDatabase() {
 		this.Connect();
 		this.Driver.Close();
@@ -34,13 +39,81 @@ public class GamespyDatabase {
 	
 	public void UpdateUser(String Nick, String CC) {
 		this.Connect();
-		boolean Updated = false;
 		try {
 			 this.Driver.Update("UPDATE users SET country='" + CC + "' WHERE name='" + Nick + "'");
 		} catch (SQLException e) {
 			System.out.println("SQL Error: " + e.getMessage());
 		}
 		this.Driver.Close();
+	}
+	
+	public boolean CreateUser(String Nick, String password, String email, String country) throws SQLException {
+		this.Connect();
+		ResultSet rs = this.Driver.Execute("SELECT MAX(id) FROM users");
+		int num1;
+		try {
+			int result = Integer.getInteger(rs.getString("max").toString());
+			num1 = result + 1;
+			if (num1 < 500000000)
+				num1 = 500000000;
+		} catch(Exception e) {
+			num1 = 500000000;
+		}
+		boolean num2 = this.Driver.Update("INSERT INTO users (id, name, password, email, country) VALUES (" + num1 + ", '" + Nick + "', '" + password + "', '" + email + "', '" + country + "')");
+		this.Driver.Close();
+		return num2;
+	}
+	
+	public ResultSet GetUser(String Nick) throws SQLException {
+		this.Connect();
+		ResultSet rs = this.Driver.Execute("SELECT id, name, password, country, session FROM users WHERE name = " + Nick);
+		this.Driver.Close();
+		if(rs != null)
+			return rs;
+		else
+			return null;
+	}
+	
+	public ResultSet GetUser(String email, String password) throws SQLException {
+		this.Connect();
+		ResultSet rs = this.Driver.Execute("SELECT id, name, password, country, session FROM users WHERE email = " + email + " AND password = " + password);
+		this.Driver.Close();
+		if (rs != null)
+			return rs;
+		else
+			return null;
+	}
+	
+	public boolean DeleteUser(String Nick) throws SQLException {
+		this.Connect();
+		boolean result = this.Driver.Update("DELETE FROM users WHERE name = " + Nick);
+		this.Driver.Close();
+		return result;
+	}
+	
+	public int GetPID(String Nick) throws SQLException {
+		this.Connect();
+		ResultSet rs = this.Driver.Execute("SELECT id FROM users WHERE name = " + Nick);
+		
+		if(rs == null) {
+			this.Driver.Close();
+			return 0;
+		} else {
+			int result = rs.getInt("id");
+			if(result == (int)result) {
+				this.Driver.Close();
+				return result;
+			} else {
+				return 0;
+			}
+		}
+	}
+	
+	public int SetPID(String Nick, int PID) throws SQLException {
+		this.Connect();
+		ResultSet rs1 = this.Driver.Execute("");
+		ResultSet rs2 = this.Driver.Execute("");
+		
 	}
 	
 	public void Connect() {

@@ -30,7 +30,7 @@ public class Server {
 		System.out.println("Initializing...");
 		try
 	    {
-	      //Server.Database = new GamespyDatabase();
+	      Server.Database = new GamespyDatabase();
 	    } catch (Exception ex)
 	    {
 	      return;
@@ -83,7 +83,7 @@ public class Server {
 					break;
 					
 				case "accounts":
-					System.out.println(" - Total Accounts: "/* + Server.Database.GetNumAccounts()*/);
+					System.out.println(" - Total Accounts: " + Server.Database.GetNumAccounts());
 					break;
 					
 				case "create":
@@ -119,7 +119,7 @@ public class Server {
 						String yn = br.readLine();
 						yn = yn.toLowerCase();
 						if(yn == "y" || yn == "yes") {
-							System.out.println((Server.Database.DeleteUser(cmd[1]) != 1 ? " - Failed to remove account from database." : " - Account deleted successfully"));
+							System.out.println((Server.Database.DeleteUser(cmd[1]) != true ? " - Failed to remove account from database." : " - Account deleted successfully"));
 							break;
 						} else if(yn == "n" || yn == "no") {
 							System.out.println(" - Command cancelled.");
@@ -148,7 +148,6 @@ public class Server {
 		            else
 		            {
 		              int result = Integer.parseInt(cmd[2]);
-		              //Integer.parseInt(cmd[2], result);
 		              if (result != (int)result)
 		              {
 		            	  System.out.println(" - Player ID must be an numeric only!");
@@ -190,7 +189,7 @@ public class Server {
 			            System.out.println("");
 			            return;
 					} else {
-						ResultSet user = Server.Database.getUser(cmd[1]);
+						ResultSet user = Server.Database.GetUser(cmd[1]);
 						if(user == null) {
 							System.out.println(" - Account " + user.getString("username") + " does not exist in the database.");
 						} else {
