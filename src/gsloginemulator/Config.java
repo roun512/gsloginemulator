@@ -4,6 +4,7 @@
 package gsloginemulator;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 //import gsloginemulatorDatabase.*;
 import java.io.*;
 import java.util.Scanner;
@@ -26,26 +27,23 @@ public class Config {
 		
 	}
 	
-	public static String getLine(String Key) {
+	public static String getLine(String Key) throws FileNotFoundException {
 		File config = new File(Config.IniLocation);
 		Scanner in = null;
-		String value = null;
-		try {
-			in = new Scanner(new FileReader(config));
-			while(in.hasNextLine()) {
-				String result = in.nextLine();
-				String[] word = result.trim().split(" ");
-				if(word[0] == Key && word[1] == "=") {
-					value = word[2];
-				} else {
-					System.out.println(Key + " variable is not found in config.ini file!");
-					in.next();
-					break;
-				}
-				
+		String value = "";
+		String result;
+		
+		in = new Scanner(new FileReader(config));
+		while(in.hasNextLine()) {
+			result = in.nextLine();
+			String[] word = result.trim().split("");
+			System.out.println(result);
+			if(word[0] == Key) {
+				value = word[1];
+				break;
+			} else {
+				in.next();
 			}
-		} catch(Exception e) {
-			System.out.println("Wasn\'t able to read config.ini! error: " + e.getMessage());
 		}
 		in.close();
 		return value;
