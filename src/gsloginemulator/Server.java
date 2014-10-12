@@ -128,7 +128,7 @@ public class Server {
 					}
 					
 				case "setpid":
-					if (command.Length < 3)
+					if (command.length() < 3)
 		            {
 						System.out.println(" - Incorrect command format. Please type 'help' to see list of available commands.");
 						System.out.println("");
@@ -162,7 +162,7 @@ public class Server {
 		                switch (num)
 		                {
 		                  case -2:
-		                      str2 = String.format("PID {0} is already in use.", (object) result);
+		                      str2 = String.format("PID " + cmd[2] + " is already in use.");
 		                      break;
 		                  case -1:
 		                      str2 = String.format("Account " + cmd[1] + " does not exist in the gamespy database.");

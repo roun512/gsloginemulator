@@ -10,25 +10,23 @@ import java.util.Properties;
 
 public class DatabaseDriver {
 	
-	
-	private Boolean IsNewDatabase;
 	public Connection connection;
-	
 
-	public void main(String[] args) {
+	public DatabaseDriver(String hostname, int port, String username, String password, String database) {
 		Properties connectionProps = new Properties();
-		connectionProps.put("user", args[2]);
-		connectionProps.put("password", args[3]);
+		connectionProps.put("user", username);
+		connectionProps.put("password", password);
 		try {
-			this.connection = DriverManager.getConnection("jdbc:mysql://" + args[0] + ":" + args[1] + "/" + args[4], connectionProps);
+			this.connection = DriverManager.getConnection("jdbc:mysql://" + hostname + ":" + port + "/" + database, connectionProps);
 		} catch(Exception e) {
 			System.out.println("Couldn\'t connect to database! error: " + e.getMessage());
 		}
 	}
 
-//	public void Connect() {
-//		this.connection
-//	}
+	public void Connect(String host, int port, String username, String password, String database) {
+		
+		
+	}
 	
 	public void Close() {
 		try {
@@ -38,12 +36,13 @@ public class DatabaseDriver {
 		}
 	}
 	
-	public void Execute(String sql) throws SQLException {
+	public ResultSet Execute(String sql) throws SQLException {
 		Statement st = null;
+		ResultSet result = null;
 		try {
 			st = this.connection.createStatement();
 			ResultSet rs = st.executeQuery(sql);
-			
+			result = rs;
 		} catch(SQLException e) {
 			System.out.println("SQL Error: " + e.getMessage());
 		} finally {
@@ -51,7 +50,23 @@ public class DatabaseDriver {
 				st.close();
 			}
 		}
-		
+		return result;
+	}
+	public boolean Update(String sql) throws SQLException {
+		Statement st = null;
+		boolean executed = false;
+		try {
+			st = this.connection.createStatement();
+			st.executeQuery(sql);
+			executed = true;
+		} catch(SQLException e) {
+			System.out.println("SQL Error: " + e.getMessage());
+		} finally {
+			if(st != null) {
+				st.close();
+			}
+		}
+		return executed;
 	}
 
 	
