@@ -37,7 +37,6 @@ public class Config {
 		while(in.hasNextLine()) {
 			result = in.nextLine();
 			String[] word = result.trim().split("");
-			System.out.println(result);
 			if(word[0] == Key) {
 				value = word[1];
 				break;

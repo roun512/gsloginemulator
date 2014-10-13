@@ -1,5 +1,7 @@
 package gsloginemulator;
 
+import java.io.IOException;
+
 
 
 /**
@@ -16,7 +18,11 @@ public class Program {
 		System.out.println("Battlefield Gamespy Login Emulator v" + Program.version);
 		System.out.println("Created in Java by roun512 for http://battlelog.co");
 		System.out.println("");
-		Server server = new Server();
+		try {
+			Server server = new Server();
+		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

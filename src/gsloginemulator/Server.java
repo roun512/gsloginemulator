@@ -7,7 +7,7 @@ import java.io.*;
 //import java.io.FileOutputStream;
 //import java.io.File;
 //import java.io.OutputStreamWriter;
-import java.sql.ResultSet;
+import java.sql.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -26,7 +26,7 @@ public class Server {
     //private GpspServer SpServer;
     public static GamespyDatabase Database;
 	
-	public static void main(String[] args) throws IOException {
+	public Server() throws IOException, InterruptedException {
 		System.out.println("Initializing...");
 		try
 	    {
@@ -64,7 +64,7 @@ public class Server {
 		
 	}
 
-	public static void checkInput() throws IOException {
+	public static void checkInput() throws IOException, InterruptedException {
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		System.out.print("command > ");
 		String command = br.readLine();
@@ -140,7 +140,7 @@ public class Server {
 		            	System.out.println("");
 		                return;
 		            }
-		            else if (Server.Database.GetUser(cmd[1]) == null)
+		            else if (Server.Database.UserExists(cmd[1]) == false)
 		            {
 		            	System.out.println(" - Account " + cmd[1] + " does not exist in the gamespy database.");
 		            	return;
@@ -156,27 +156,17 @@ public class Server {
 		              }
 		              else
 		              {
-		                int num = Server.Database.SetPID(cmd[1], result);
+		                boolean num = Server.Database.SetPID(cmd[1], result);
 		                String str2 = "";
-		                switch (num)
-		                {
-		                  case -2:
+		                if(!num)
 		                      str2 = String.format("PID " + cmd[2] + " is already in use.");
-		                      break;
-		                  case -1:
-		                      str2 = String.format("Account " + cmd[1] + " does not exist in the gamespy database.");
-		                      break;
-		                  case 0:
-		                	  str2 = "Error setting PID";
-		                      break;
-		                  case 1:
-		                	  str2 = "New PID is set!";
-		                	  break;
-		                }
+		                else
+		                str2 = "New PID is set!";
+		                
 		                System.out.println(" - " + str2);
 		               	System.out.println("");
 		               	break;
-		             	}
+		              }
 		            }
 					
 				case "fetch":
@@ -191,7 +181,7 @@ public class Server {
 					} else {
 						ResultSet user = Server.Database.GetUser(cmd[1]);
 						if(user == null) {
-							System.out.println(" - Account " + user.getString("username") + " does not exist in the database.");
+							System.out.println(" - Account " + cmd[1] + " does not exist in the database.");
 						} else {
 							System.out.println(" - Account ID: " + user.getString("id") + " - Email: " + user.getString("email") + " - Country: " + user.getString("country"));
 							break;
@@ -224,11 +214,13 @@ public class Server {
 	public static void Log(String message) {
 		Date now = new Date();
 		DateFormat dateFormat = new SimpleDateFormat("MM/dd HH:mm");
+		OutputStreamWriter writer;
 		try {
 			FileOutputStream Logfile = new FileOutputStream(Server.LogFile);
-			OutputStreamWriter writer = new OutputStreamWriter(Logfile);
+			writer = new OutputStreamWriter(Logfile);
 			writer.write(dateFormat.format(now) + " > " + message);
 			writer.flush();
+			writer.close();
 		} catch (FileNotFoundException e) {
 			System.out.println("server.log not found! error: " + e.getMessage());
 		} catch (IOException e) {

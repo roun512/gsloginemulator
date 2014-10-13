@@ -1,5 +1,6 @@
 package gsloginemulatorDatabase;
 
+import java.io.FileNotFoundException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -16,8 +17,14 @@ public class GamespyDatabase {
 	private DatabaseDriver Driver;
 	
 	public void main() {
-		String username = Config.getLine("Username");
-		System.out.print(username);
+		String value = null;
+		try {
+			String username = Config.getLine("Username");
+			value = username;
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		System.out.print(value);
 	}
 	
 	public GamespyDatabase() {
@@ -27,14 +34,14 @@ public class GamespyDatabase {
 
 	public boolean UserExists(String Nick) {
 		this.Connect();
-		ResultSet result = null;
+		boolean result = false;
 		try {
-			result = this.Driver.Execute("SELECT id FROM users WHERE name = " + Nick);
+			result = this.Driver.Query("SELECT id FROM users WHERE name = '" + Nick + "'");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		this.Driver.Close();
-		return result != null;
+		return result;
 	}
 	
 	public void UpdateUser(String Nick, String CC) {
@@ -66,7 +73,7 @@ public class GamespyDatabase {
 	
 	public ResultSet GetUser(String Nick) throws SQLException {
 		this.Connect();
-		ResultSet rs = this.Driver.Execute("SELECT id, name, password, country, session FROM users WHERE name = " + Nick);
+		ResultSet rs = this.Driver.Execute("SELECT id, name, password, country, session FROM users WHERE name = '" + Nick + "'");
 		this.Driver.Close();
 		if(rs != null)
 			return rs;
@@ -76,7 +83,7 @@ public class GamespyDatabase {
 	
 	public ResultSet GetUser(String email, String password) throws SQLException {
 		this.Connect();
-		ResultSet rs = this.Driver.Execute("SELECT id, name, password, country, session FROM users WHERE email = " + email + " AND password = " + password);
+		ResultSet rs = this.Driver.Execute("SELECT id, name, password, country, session FROM users WHERE email = '" + email + "' AND password = '" + password + "'");
 		this.Driver.Close();
 		if (rs != null)
 			return rs;
@@ -86,14 +93,14 @@ public class GamespyDatabase {
 	
 	public boolean DeleteUser(String Nick) throws SQLException {
 		this.Connect();
-		boolean result = this.Driver.Update("DELETE FROM users WHERE name = " + Nick);
+		boolean result = this.Driver.Update("DELETE FROM users WHERE name = '" + Nick + "'");
 		this.Driver.Close();
 		return result;
 	}
 	
 	public int GetPID(String Nick) throws SQLException {
 		this.Connect();
-		ResultSet rs = this.Driver.Execute("SELECT id FROM users WHERE name = " + Nick);
+		ResultSet rs = this.Driver.Execute("SELECT id FROM users WHERE name = '" + Nick + "'");
 		
 		if(rs == null) {
 			this.Driver.Close();
@@ -109,20 +116,25 @@ public class GamespyDatabase {
 		}
 	}
 	
-	public int SetPID(String Nick, int PID) throws SQLException {
+	public boolean SetPID(String Nick, int PID) throws SQLException {
 		this.Connect();
-		ResultSet rs1 = this.Driver.Execute("");
-		ResultSet rs2 = this.Driver.Execute("");
+		boolean rs1 = this.Driver.Update("UPDATE users SET id=" + PID + " WHERE name = '" + Nick + "'");
+		this.Driver.Close();
+		return rs1;
 		
 	}
 	
 	public void Connect() {
-		String username = Config.getLine("Username");
-		String password = Config.getLine("Password");
-		String hostname = Config.getLine("Hostname");
-		int port = Integer.parseInt(Config.getLine("Port"));
-		String database = Config.getLine("Database");
-		this.Driver = new DatabaseDriver(hostname, port, username, password, database);
+		//String username = Config.getLine("Username");
+		//String password = Config.getLine("Password");
+		//String hostname = Config.getLine("Hostname");
+		//int port = Integer.parseInt(Config.getLine("Port"));
+		//String database = Config.getLine("Database");
+		this.Driver = new DatabaseDriver("localhost", 3306, "root", "", "bf2gs");
+	}
+
+	public String GetNumAccounts() {
+		return null;
 	}
 
 }
