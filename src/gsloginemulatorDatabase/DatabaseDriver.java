@@ -88,8 +88,11 @@ public class DatabaseDriver {
 		boolean executed = false;
 		try {
 			st = this.connection.createStatement();
-			st.executeQuery(sql);
-			executed = true;
+			ResultSet rs = st.executeQuery(sql);
+			if(rs.next())
+				executed = true;
+			else
+				executed = false;
 		} catch(SQLException e) {
 			System.out.println("SQL Error: " + e.getMessage());
 		} finally {

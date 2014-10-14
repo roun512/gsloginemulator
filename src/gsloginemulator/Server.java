@@ -229,7 +229,7 @@ public class Server {
 		
 	}
 	
-	public static void Log(String message, String[] items) {
+	public static void Log(String message, Object[] items) {
 		Server.Log(String.format(message, items));	
 	}
 }

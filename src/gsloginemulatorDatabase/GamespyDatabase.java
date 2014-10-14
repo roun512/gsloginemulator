@@ -16,17 +16,6 @@ public class GamespyDatabase {
 	
 	private DatabaseDriver Driver;
 	
-	public void main() {
-		String value = null;
-		try {
-			String username = Config.getLine("Username");
-			value = username;
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		System.out.print(value);
-	}
-	
 	public GamespyDatabase() {
 		this.Connect();
 		this.Driver.Close();
