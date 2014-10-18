@@ -22,8 +22,8 @@ public class Server {
 
 	protected static boolean isRunning = true;
 	public static File LogFile = new File(System.getProperty("user.dir") + "server.log");
-    //private GpcmServer CmServer;
-    //private GpspServer SpServer;
+    private static GpcmServer CmServer;
+    //private static GpspServer SpServer;
     public static GamespyDatabase Database;
 	
 	public Server() throws IOException, InterruptedException {
@@ -37,8 +37,8 @@ public class Server {
 	    }
 		try
 		{
+			Server.CmServer = new GpcmServer();
 			System.out.println("<GPCM> Binding to port 29900");
-		//	this.CmServer = new GpcmServer();
 		}
 		catch (Exception ex) {
 			System.out.println("Error binding to port 29900! " + ex.getMessage());
@@ -47,8 +47,8 @@ public class Server {
 			return;
 		}
 		try {
-			System.out.println("<GPSP> Binding to port 29901");
-		//	this.SpServer = new GpspServer();
+		//	Server.SpServer = new GpspServer();
+		//	System.out.println("<GPSP> Binding to port 29901");
 		} catch(Exception ex) {
 			System.out.println("Error binding to port 29901! " + ex.getMessage());
 			System.out.println("Closing Server");
@@ -58,7 +58,7 @@ public class Server {
 		System.out.println("Ready for connections! Type \"help\" for a list of commands");
 		while(Server.isRunning)
 			checkInput();
-		//Server.CmServer.Shutdown();
+		Server.CmServer.Shutdown();
 		//Server.SpServer.Shutdown();
 		System.out.println("Server shutdown Successfully");
 		
@@ -79,7 +79,7 @@ public class Server {
 					break;
 					
 				case "connections":
-					System.out.println(" - Total Connections: "/* + Server.CmServer.NumClients()*/);
+					System.out.println(" - Total Connections: " + Server.CmServer.NumClients());
 					break;
 					
 				case "accounts":

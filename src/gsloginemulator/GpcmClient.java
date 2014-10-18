@@ -641,8 +641,9 @@ public class GpcmClient {
 		int num = 32;
 		while (num > 0) {
 			--num;
-			str = str + this.rand.;
+			str = str + this.rand;
 		}
+		return str;
 	}
 	
 }
