@@ -64,10 +64,13 @@ public class GamespyDatabase {
 		this.Connect();
 		ResultSet rs = this.Driver.Execute("SELECT id, name, password, country, session FROM users WHERE name = '" + Nick + "'");
 		this.Driver.Close();
-		if(rs != null)
-			return rs;
-		else
+		ResultSet result;
+		if(rs.next()) {
+			result = rs;
+			return result;
+		} else {
 			return null;
+		}
 	}
 	
 	public ResultSet GetUser(String email, String password) throws SQLException {
@@ -122,8 +125,16 @@ public class GamespyDatabase {
 		this.Driver = new DatabaseDriver("localhost", 3306, "root", "", "bf2gs");
 	}
 
-	public String GetNumAccounts() {
-		return null;
+	public int GetNumAccounts() throws SQLException {
+		this.Connect();
+		int result = 0;
+		ResultSet rs = this.Driver.Execute("SELECT COUNT(id) AS count FROM users");
+		if(rs.next()){
+			result = rs.getInt("count");
+			return result;
+		} else {
+			return (Integer) null;
+		}
 	}
 
 }
