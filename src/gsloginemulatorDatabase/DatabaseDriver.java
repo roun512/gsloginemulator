@@ -84,10 +84,6 @@ public class DatabaseDriver {
 				executed = false;
 		} catch(SQLException e) {
 			System.out.println("SQL Error: " + e.getMessage());
-		} finally {
-			if(st != null) {
-				st.close();
-			}
 		}
 		return executed;
 	}
