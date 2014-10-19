@@ -12,53 +12,52 @@ import java.io.*;
 
 public class GpcmServer {
 
-	private ServerSocket Listener = null;
-	private List<GpcmClient> Clients = new ArrayList<GpcmClient>();
+	private static ServerSocket Listener = null;
+	private static List<GpcmClient> Clients = new ArrayList<GpcmClient>();
 	private Thread ListenThread;
 	
 	public GpcmServer() throws IOException, InterruptedException {
-		this.Listener = new ServerSocket(29900);
-		this.ListenThread = new Thread();// {
-//			public void run(){
-//			    	try {
-//			    		GpcmServer server = new GpcmServer();
-//			    		server.ListenForClients();
-//			    	} catch (InterruptedException ex) {
-//			    		System.out.println(ex.getMessage());
-//			    	} catch (IOException e) {
-//						// TODO Auto-generated catch block
-//						e.printStackTrace();
-//					}
-//			}
-//		};
+		GpcmServer.Listener = new ServerSocket(29900);
+		this.ListenThread = new Thread(new Runnable() {
+			public void run(){
+			    	try {
+						this.ListenForClients();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+			}
+
+			private void ListenForClients() throws IOException {
+				while(true)
+				{
+					GpcmServer.Clients.add(new GpcmClient(GpcmServer.Listener.accept()));
+					for (int index = GpcmServer.Clients.size() - 1; index >= 0; --index) {
+						if(GpcmServer.Clients.get(index).Disposed) {
+							GpcmServer.Clients.remove(index);
+						}
+					}
+					try {
+						Thread.sleep(100);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
 		this.ListenThread.start();
-		this.ListenForClients();
 	}
 	
 	@SuppressWarnings("deprecation")
 	public void Shutdown() throws IOException {
 		this.ListenThread.stop();
-		for (GpcmClient client : this.Clients) {
+		for (GpcmClient client : GpcmServer.Clients) {
 			client.Dispose();
 		}
-		this.Listener.close();
+		GpcmServer.Listener.close();
 	}
 	
 	public int NumClients() {
-		return this.Clients.size();
-	}
-	
-	private void ListenForClients() throws IOException, InterruptedException {
-		//while(true)
-		//{
-			this.Clients.add(new GpcmClient(this.Listener.accept()));
-			for (int index = this.Clients.size() - 1; index >= 0; --index) {
-				if(this.Clients.get(index).Disposed) {
-					this.Clients.remove(index);
-				}
-			}
-			Thread.sleep(100);
-		//}
+		return GpcmServer.Clients.size();
 	}
 
 }
