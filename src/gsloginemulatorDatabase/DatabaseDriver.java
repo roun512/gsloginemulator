@@ -50,18 +50,10 @@ public class DatabaseDriver {
 	public ResultSet Execute(String sql) throws SQLException {
 		Statement st = null;
 		ResultSet result = null;
-		try {
-			st = this.connection.createStatement();
-			ResultSet rs = st.executeQuery(sql);
-			result = rs;
-			rs.close();
-		} catch(SQLException e) {
-			System.out.println("SQL Error: " + e.getMessage());
-		} finally {
-			if(st != null) {
-				st.close();
-			}
-		}
+		st = this.connection.createStatement();
+		ResultSet rs = st.executeQuery(sql);
+		result = rs;
+	
 		return result;
 	}
 	
@@ -74,12 +66,9 @@ public class DatabaseDriver {
 			executed = true;
 		} catch(SQLException e) {
 			System.out.println("SQL Error: " + e.getMessage());
-		} finally {
-			if(st != null) {
-				st.close();
-			}
+		
 		}
-		System.out.println(executed);
+		
 		return executed;
 	}
 
@@ -95,10 +84,6 @@ public class DatabaseDriver {
 				executed = false;
 		} catch(SQLException e) {
 			System.out.println("SQL Error: " + e.getMessage());
-		} finally {
-			if(st != null) {
-				st.close();
-			}
 		}
 		return executed;
 	}

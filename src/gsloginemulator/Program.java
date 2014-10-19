@@ -19,6 +19,7 @@ public class Program {
 		System.out.println("Created in Java by roun512 for http://battlelog.co");
 		System.out.println("");
 		try {
+			@SuppressWarnings("unused")
 			Server server = new Server();
 		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
