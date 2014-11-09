@@ -1,11 +1,7 @@
 package gsloginemulatorDatabase;
 
-import java.io.FileNotFoundException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
-import gsloginemulator.*;
-
 
 /*
  *@author roun512

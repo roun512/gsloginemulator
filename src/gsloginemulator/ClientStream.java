@@ -18,9 +18,13 @@ public class ClientStream {
 	private BufferedWriter Writer;
 	private boolean Debugging;
 	
-	public ClientStream(Socket client) throws IOException {
+	public ClientStream(Socket client) {
 		this.Client = client;
-		this.Stream = this.Client.getInputStream();
+		try {
+			this.Stream = this.Client.getInputStream();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		this.Debugging = true;
 	}
 
@@ -54,15 +58,24 @@ public class ClientStream {
 			return str.toString();
 	}
 	
-	public void Write(String message, Object[] items) throws IOException {
+	public void Write(String message, Object[] items) {
 		message = String.format(message, items);
 		ClientStream.Log(String.format("Port %s Recieves: %s", this.Client.getLocalPort(), message));
 		this.Write(message.getBytes());
 	}
 	
-	public void Write(byte[] bytes) throws IOException {
+	public void Write(String message) {
+		ClientStream.Log(String.format("Port %s Recieves: %s", this.Client.getLocalPort(), message));
+		this.Write(message.getBytes());
+	}
+	
+	public void Write(byte[] bytes) {
 		
-		this.Writer.write(bytes.toString());
+		try {
+			this.Writer.write(bytes.toString());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private static void Log(String message) {

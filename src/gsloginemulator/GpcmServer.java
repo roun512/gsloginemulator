@@ -20,22 +20,13 @@ public class GpcmServer {
 		GpcmServer.Listener = new ServerSocket(29900);
 		this.ListenThread = new Thread(new Runnable() {
 			public void run(){
-			    	try {
-<<<<<<< HEAD
-			    		this.ListenForClients();
-			    	} catch (IOException e) {
-						e.printStackTrace();
-					}
+			    try {
+				   this.ListenForClients();
+			    } catch (IOException e) {
+			    	e.printStackTrace();
+				}
 			}
 			
-=======
-						this.ListenForClients();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-			}
-
->>>>>>> d7550a195c6b22d636ac26ce37cc179335956667
 			private void ListenForClients() throws IOException {
 				while(true)
 				{

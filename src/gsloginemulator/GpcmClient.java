@@ -4,9 +4,12 @@
 package gsloginemulator;
 
 import java.net.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Random;
 import java.io.*;
-import java.lang.Object;
 
 /**
  * @author roun512
@@ -611,18 +614,35 @@ public class GpcmClient {
 	private String clientChallengeKey;
 	private String serverChallengeKey;
     private String clientResponse;
-    private String User;
+    private ResultSet User;
     
     public boolean Disposed;
     
 	public GpcmClient(Socket Client) {
 		this.Client = Client;
+		this.Stream = new ClientStream(Client);
+		this.Disposed = false;
+		this.ClientThread = new Thread() {
+			public void run(){
+		    	try {
+		    		GpcmClient.this.HandleClient();
+		    		Thread.sleep(2000);
+		    	} catch (InterruptedException ex) {
+		    		System.out.println(ex.getMessage());
+		    	}
+			}
+		};
+		this.ClientThread.start();
 	}
 	
-	public void Dispose() throws IOException
+	public void Dispose()
     {
       if (this.Client.isConnected())
-        this.Client.close();
+		try {
+			this.Client.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
       this.Disposed = true;
     }
 	
@@ -630,10 +650,202 @@ public class GpcmClient {
 		this.Dispose();
 	}
 	
-	private void HandleClient() throws IOException {
+	private void Update() {
+		if(!this.Stream.HasData())
+			return;
+		String str = "";
+		try {
+			str = this.Stream.Read();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		String[] recv = str.split("\\");
+		switch(recv[1]) {
+			case "newuser":
+			try {
+				this.HandleNewUser(recv);
+			} catch (SQLException e1) {
+				e1.printStackTrace();
+			}
+				++this.Step;
+				break;
+			case "login":
+				this.ProcessLogin(recv);
+				++this.Step;
+				break;
+			case "getprofile":
+				if(this.Step < 2) {
+					try {
+						this.SendProfile(false);
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+					++this.Step;
+					break;
+				} else {
+					try {
+						this.SendProfile(true);
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+					break;
+				}
+			case "updatepro":
+				this.UpdateUser(recv);
+				break;
+			case "logout":
+				try {
+					this.Logout();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				break;
+			default:
+				Server.Log(String.format("Unknown Message Passed: %s", str));
+				break;
+		}
+	}
+	
+	private void ProcessLogin(String[] recv) {
+		this.clientNick = this.GetParamValue(recv, "uniquenick");
+		this.clientChallengeKey = this.GetParamValue(recv, "challenge");
+		this.clientResponse = this.GetParamValue(recv, "response");
+		try {
+			this.SendProof();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void SendProof() throws SQLException {
+		try {
+			this.User = Server.Database.GetUser(this.clientNick);
+		} catch(Exception e) {
+			this.Dispose();
+			return;
+		}
+		if(this.User == null) {
+			this.Stream.Write("\\error\\\\err\\265\\fatal\\\\errmsg\\The uniquenick provided is incorrect!\\id\\1\\final\\");
+	        this.Dispose();
+		} else {
+			int result = 0;
+			try {
+				result = Integer.parseInt(this.User.getString("id").toString());
+			} catch (NumberFormatException | SQLException e) {
+				e.printStackTrace();
+			}
+			if (this.clientResponse == this.GenerateResponseValue(this.clientNick, (String) this.User.getString("password"), this.clientChallengeKey, this.serverChallengeKey))
+	        {
+				this.clientLt = this.GenerateRandomString(22);
+				this.Stream.Write(String.format("\\lc\\2\\sesskey\\%s\\proof\\%s\\userid\\%s\\profileid\\%s\\uniquenick\\%s\\lt\\%s__\\id\\1\\final\\", (Object) this.GenerateSession(), (Object) this.GenerateResponseValue(this.clientNick, (String) this.User.getString("password"), this.serverChallengeKey, this.clientChallengeKey), (Object) result, (Object) result, (Object) this.clientNick, (Object) this.clientLt));
+	        } else {
+	        	this.Stream.Write("\\error\\\\err\\260\\fatal\\\\errmsg\\The password provided is incorrect.\\id\\1\\final\\");
+	            this.Dispose();
+	        }
+		}
+	}
+	
+	private void SendProfile(boolean retrieve) throws SQLException
+    {
+      this.Stream.Write(String.format("\\pi\\\\profileid\\%s\\nick\\%s\\userid\\%s\\email\\%s\\sig\\%s\\uniquenick\\%s\\pid\\0\\firstname\\\\lastname\\\\countrycode\\%s\\birthday\\16844722\\lon\\0.000000\\lat\\0.000000\\loc\\\\id\\%s\\final\\", (Object) (String) this.User.getString("id"), (Object) this.clientNick, (Object) (String) this.User.getString("id"), (Object) (String) this.User.getString("email"), (Object) this.GenerateSig(), (Object) this.clientNick, (Object) (String) this.User.getString("country"), retrieve ? (Object) "5" : (Object) "2"));
+    }
+	
+	private void HandleClient() {
 		if (this.Stream.HasData())
-			this.Stream.Read();
+			try {
+				this.Stream.Read();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		 Server.Log("[GPCM] Client Connected: " + this.Client.getLocalSocketAddress());
+	}
+	
+	private void HandleNewUser(String[] recv) throws SQLException {
+		String parameterValue1 = this.GetParamValue(recv, "nick");
+	    String parameterValue2 = this.GetParamValue(recv, "email");
+	    boolean flag;
+	    try {
+	    	flag = Server.Database.UserExists(parameterValue1);
+	    } catch(Exception e) {
+	    	this.Dispose();
+	    	return;
+	    }
+	    if(flag) {
+	    	this.Stream.Write("\\error\\\\err\\516\\fatal\\\\errmsg\\This account name is already in use!\\id\\1\\final\\");
+	    	this.Dispose();
+	    } else {
+	    	String Pass = Utils.DecodeGamespyPassword(this.GetParamValue(recv, "passwordenc"));
+	    	boolean user1 = Server.Database.CreateUser(parameterValue1, Pass, parameterValue2, "US");
+	    	ResultSet user2 = Server.Database.GetUser(parameterValue1);
+	    	if (!user1 || user2 == null) {
+	    		this.Stream.Write("\\error\\\\err\\516\\fatal\\\\errmsg\\Error creating account!\\id\\1\\final\\");
+	            this.Dispose();
+	    	} else {
+	    		this.Stream.Write(String.format("\\nur\\\\userid\\%s\\profileid\\%s\\id\\1\\final\\", user2.getString("id"), user2.getString("id")));
+	    	}
+	    }
+	}
+	
+	private void UpdateUser(String[] recv) {
+		try {
+			Server.Database.UpdateUser(this.GetParamValue(recv, "nick"), this.GetParamValue(recv, "countrycode"));
+		} catch(Exception e) {
+			this.Dispose();
+		}
+	}
+	
+	private String GetParamValue(String[] parts, String param) {
+		boolean flag = false;
+		for(String str : parts) {
+			if(flag)
+				return str;
+			if (str == param)
+				flag = true;
+		}
+		return "";
+	}
+	
+	private String GenerateResponseValue(String nickname, String password, String challenge1, String challenge2) {
+		MessageDigest md5 = null;
+		try {
+			md5 = MessageDigest.getInstance("MD5");
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+		md5.update(password.getBytes());
+		byte[] hash1 = md5.digest(password.getBytes());
+		String str1 = "";
+		for(byte num : hash1)
+			str1 = str1 + this.Btoh[(int) num];
+		String str2 = str1;
+		for (int index = 0; index < 48; ++index)
+			str2 = str2 + " ";
+		String s = str2 + nickname + challenge1 + challenge2 + str1;
+		md5.update(s.getBytes());
+		byte[] hash2 = md5.digest(s.getBytes());
+		StringBuilder stringBuilder = new StringBuilder();
+		for(byte num : hash2)
+			stringBuilder.append(String.format("{0}", (Object) this.Btoh[(int) num]));
+		return ((Object) stringBuilder).toString();
+	}
+	
+	public short GenerateSession() {
+		int length = this.clientNick.length();
+		int num = 0;
+		for(int index=0; index<length;++index) {
+//			num = (int) this.CrcTable[((int) Character.toString(this.clientNick.charAt(index)) ^ num) & (int) Byte.MAX_VALUE] ^ num >> 8;
+		}
+		return (short) num;
+	}
+	
+	private String GenerateRandomString(int length) {
+		String str = "";
+		while(length > 0)
+		{
+			--length;
+			str = str + this.rand;
+		}
+		return str;
 	}
 	
 	private String GenerateSig() {

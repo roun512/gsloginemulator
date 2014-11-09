@@ -2,9 +2,8 @@ package gsloginemulator;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.net.SocketException;
 import java.sql.ResultSet;
-import java.util.List;
+import java.sql.SQLException;
 
 /*
  * @author roun512
@@ -21,15 +20,11 @@ public class GpspClient {
 	public GpspClient(Socket client) {
 		this.Disposed = false;
 		this.Client = client;
-		try {
-			this.Stream = new ClientStream(client);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		this.Stream = new ClientStream(client);
 		this.ClientThread = new Thread() {
 			public void run(){
 		    	try {
+		    		GpspClient.this.Start();
 		    		Thread.sleep(2000);
 		    	} catch (InterruptedException ex) {
 		    		System.out.println(ex.getMessage());
@@ -37,13 +32,6 @@ public class GpspClient {
 			}
 		};
 		this.ClientThread.start();
-		try {
-			this.ClientThread.join();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
 	}
 
 	public void Dispose() {
@@ -53,7 +41,6 @@ public class GpspClient {
 			}
 			this.Disposed = true;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -64,12 +51,12 @@ public class GpspClient {
 			try {
 				this.Update();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			Thread.sleep(200);
 		}
 		Server.Log("[GPSP] Client Disconnected: " + this.Client.getLocalSocketAddress());
+		this.Dispose();
 	}
 	
 	public void Update() throws IOException {
@@ -79,7 +66,11 @@ public class GpspClient {
 		String[] recv = this.Stream.Read().split("\\");
 		switch(recv[1]) {
 			case "nicks":
+			try {
 				this.SendGPSP(recv);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 				break;
 			case "check":
 				this.SendCheck(recv);
@@ -87,7 +78,7 @@ public class GpspClient {
 		}
 	}
 	
-	private void SendGPSP(String[] recv) {
+	private void SendGPSP(String[] recv) throws SQLException {
 		try {
 			this.ClientData = Server.Database.GetUser(this.GetParamValue(recv, "email"), this.GetParamValue(recv, "pass"));
 		} catch(Exception e) {
@@ -95,11 +86,11 @@ public class GpspClient {
 			return;
 		}
 		
-//		if(this.ClientData == null) {
-//			this.Stream.Write("\\nr\\{0}\\ndone\\\\final\\");
-//		} else {
-//			this.Stream.Write(String.format("\\nr\\1\\nick\\%s\\uniquenick\\%s\\ndone\\\\final\\", this.ClientData.get(1), this.ClientData.get(1)));
-//		}
+		if(this.ClientData == null) {
+			this.Stream.Write("\\nr\\{0}\\ndone\\\\final\\");
+		} else {
+			this.Stream.Write(String.format("\\nr\\1\\nick\\%s\\uniquenick\\%s\\ndone\\\\final\\", this.ClientData.getString("name").toString(), this.ClientData.getString("name").toString()));
+		}
 	}
 	
 	private void SendCheck(String[] recv)
@@ -114,10 +105,10 @@ public class GpspClient {
         this.Dispose();
         return;
       }
-      //if (pid == 0)
-        //this.Stream.Write("\\cur\\0\\pid\\0\\final\\");
-      //else
-        //this.Stream.Write("\\cur\\0\\pid\\{0}\\final\\", (Object) pid);
+      if (pid == 0)
+        this.Stream.Write("\\cur\\0\\pid\\0\\final\\");
+      else
+        this.Stream.Write(String.format("\\cur\\0\\pid\\%s\\final\\", (Object) pid));
     }
 	
 	private String GetParamValue(String[] parts, String param) {
